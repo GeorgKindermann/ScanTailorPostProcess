@@ -19,11 +19,11 @@ tiffsplit /tmp/st/b1Split/dj/book.tif /tmp/st/b1Split/t/
 mkdir /tmp/st/b1Split/j
 jbig2 -b /tmp/st/b1Split/j/jb2 -p -s -t .85 -a -w .1 /tmp/st/b1Split/t/*.tif
 # Combine pictures to pdf
-./img2pdf /tmp/st/b1Split/j/jb2 /tmp/st/b1Split/*.tif
+./img2pdf .24 /tmp/st/b1Split/j/jb2 /tmp/st/b1Split/*.tif
 
 
 #Extract sample pictures
-convert -density 72 -background white -alpha remove -alpha off /tmp/pdfx.pdf[148] /tmp/st/b1Split-149.png
+convert -density 300 -background white -alpha remove -alpha off /tmp/pdfx.pdf[148] /tmp/st/b1Split-149.png
 convert -resize x200 /tmp/st/b1Split-149.png ../images/b1Split1.jpg
 convert -crop 260x260+65+1620 -resize x200 /tmp/st/b1Split-149.png ../images/b1Split2.png
 convert -crop 43x25+165+1765 -sample x200 /tmp/st/b1Split-149.png ../images/b1Split3.png

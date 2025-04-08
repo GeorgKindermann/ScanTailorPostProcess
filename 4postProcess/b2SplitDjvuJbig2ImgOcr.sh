@@ -19,13 +19,13 @@ tiffsplit /tmp/st/b2Split/dj/book.tif /tmp/st/b2Split/t/
 mkdir /tmp/st/b2Split/j
 jbig2 -b /tmp/st/b2Split/j/jb2 -p -s -t .80 -a -w .1 /tmp/st/b2Split/t/*.tif
 # Combine pictures to pdf
-./img2pdf /tmp/st/b2Split/j/jb2 /tmp/st/b2Split/*.tif
+./img2pdf .12 /tmp/st/b2Split/j/jb2 /tmp/st/b2Split/*.tif
 #make ocr
 pipx run ocrmypdf -l rus --jobs 7 --output-type pdf /tmp/pdfx.pdf /tmp/st/b2SplotOcr.pdf
 
 
 #Extract sample pictures
-convert -density 72 -background white -alpha remove -alpha off /tmp/pdfx.pdf[148] /tmp/st/b2SplitOcr-149.png
+convert -density 600 -background white -alpha remove -alpha off /tmp/pdfx.pdf[148] /tmp/st/b2SplitOcr-149.png
 convert -resize x200 /tmp/st/b2SplitOcr-149.png ../images/b2SplitOcr1.jpg
 convert -crop 520x520+130+3240 -resize x200 /tmp/st/b2SplitOcr-149.png ../images/b2SplitOcr2.png
 convert -crop 86x50+330+3530 -sample x200 /tmp/st/b2SplitOcr-149.png ../images/b2SplitOcr3.png
