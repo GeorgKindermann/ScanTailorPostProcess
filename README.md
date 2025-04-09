@@ -1,4 +1,4 @@
-Compare different methods when post-processing the output from [Scantailor-Experimental](https://github.com/ImageProcessing-ElectronicPublications/scantailor-experimental).
+ls Compare different methods when post-processing the output from [Scantailor-Experimental](https://github.com/ImageProcessing-ElectronicPublications/scantailor-experimental).
 
 To reprocess the shown results [get the images](1getData.sh) from [Test images for Scan Tailor](https://github.com/ImageProcessing-ElectronicPublications/scantailor-testing). [Create](2makeProj.sh) or [use](STprojects/) those ScanTailor projects and [create filtered pictures](3runStCreateFilteredImages.sh) by going to stage 6 in ScanTailor.
 
@@ -38,6 +38,8 @@ The filtered images could be converted from tif to jpeg and there the quality co
 | B1=>mfbpdf=>ocrmypdf | 6'290'884 | Yes | ![](images/b1MfbOcr1.jpg) | ![](images/b1MfbOcr2.png) | ![](images/b1MfbOcr3.png) | ![](images/b1MfbOcr4.jpg) | ![](images/b1MfbOcr5.jpg) | [b1MfbpdfOcr.sh](4postProcess/b1MfbpdfOcr.sh) |
 | B1=>split=>harmonize=>compress=>combine| 2'719'546 | No | ![](images/b1Split1.jpg) | ![](images/b1Split2.png) | ![](images/b1Split3.png) | ![](images/b1Split4.jpg) | ![](images/b1Split5.jpg) | [b1Split.sh](4postProcess/b1SplitDjvuJbig2Img.sh) |
 | B1=>split=>harmonize=>compress=>combine=>ocr| 3'933'190 | Yes | ![](images/b1SplitOcr1.jpg) | ![](images/b1SplitOcr2.png) | ![](images/b1SplitOcr3.png) | ![](images/b1SplitOcr4.jpg) | ![](images/b1SplitOcr5.jpg) | [b1SplitOcr.sh](4postProcess/b1SplitDjvuJbig2ImgOcr.sh) |
+| B1=>split=>compress=>combine| 2'954'851 | No | ![](images/b1SplitB1.jpg) | ![](images/b1SplitB2.png) | ![](images/b1SplitB3.png) | ![](images/b1SplitB4.jpg) | ![](images/b1SplitB5.jpg) | [b1SplitB.sh](4postProcess/ b1SplitJbig2Img.sh) |
+| B1=>split=>compress=>combine=>OCR| 4'159'321 | Yes | ![](images/b1SplitBOcr1.jpg) | ![](images/b1SplitBOcr2.png) | ![](images/b1SplitBOcr3.png) | ![](images/b1SplitBOcr4.jpg) | ![](images/b1SplitBOcr5.jpg) | [b1SplitBOcr.sh](4postProcess/ b1SplitJbig2ImgOcr.sh) |
 | | | | | | | | | |
 | B2 | 121'703'962 | No | ![](images/B21.jpg) | ![](images/B22.png) | ![](images/B23.png) | ![](images/B24.jpg) | ![](images/B25.jpg) | |
 | B2=>ocrmypdf | 17'932'000 | Yes | ![](images/b2Ocr1.jpg) | ![](images/b2Ocr2.png) | ![](images/b2Ocr3.png) | ![](images/b2Ocr4.jpg) | ![](images/b2Ocr5.jpg) | [b2Orcmypdf.sh](4postProcess/b2Orcmypdf.sh) |
@@ -45,3 +47,5 @@ The filtered images could be converted from tif to jpeg and there the quality co
 | B2=>mfbpdf=>ocrmypdf | 11'755'367 | Yes | ![](images/b2MfbOcr1.jpg) | ![](images/b2MfbOcr2.png) | ![](images/b2MfbOcr3.png) | ![](images/b2MfbOcr4.jpg) | ![](images/b2MfbOcr5.jpg) | [b2MfbpdfOcr.sh](4postProcess/b2MfbpdfOcr.sh) |
 | B2=>split=>harmonize=>compress=>combine| 3'625'202 | No | ![](images/b2Split1.jpg) | ![](images/b2Split2.png) | ![](images/b2Split3.png) | ![](images/b2Split4.jpg) | ![](images/b2Split5.jpg) | [b2Split.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
 | B2=>split=>harmonize=>compress=>combine=>Ocr| 4'871'032 | Yes | ![](images/b2SplitOcr1.jpg) | ![](images/b2SplitOcr2.png) | ![](images/b2SplitOcr3.png) | ![](images/b2SplitOcr4.jpg) | ![](images/b2SplitOcr5.jpg) | [b2SplitOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
+| B2=>split=>compress=>combine| 4'159'321 | No | ![](images/b2SplitB1.jpg) | ![](images/b2SplitB2.png) | ![](images/b2SplitB3.png) | ![](images/b2SplitB4.jpg) | ![](images/b2SplitB5.jpg) | [b2SplitB.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
+| B2=>split=>compress=>combine=>Ocr| 5'304'178 | Yes | ![](images/b2SplitBOcr1.jpg) | ![](images/b2SplitBOcr2.png) | ![](images/b2SplitBOcr3.png) | ![](images/b2SplitBOcr4.jpg) | ![](images/b2SplitBOcr5.jpg) | [b2SplitBOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
