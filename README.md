@@ -6,7 +6,7 @@ One demo project treats all content as an image (A) the other tries to convert t
 
 | What | Size | Resolution | Thumb | Text | Letters | Picture | Zoom |
 |:-----|-----:|-----------:|:-----:|:----:|:-------:|:-------:|:----:|
-| Original | 71'639'885 | ~1660x24503 | ![](images/orig1.jpg) | ![](images/orig2.jpg) | ![](images/orig3.png) | ![](images/orig4.jpg) | ![](images/orig5.jpg) |
+| Original | 71'639'885 | ~1660x2450 | ![](images/orig1.jpg) | ![](images/orig2.jpg) | ![](images/orig3.png) | ![](images/orig4.jpg) | ![](images/orig5.jpg) |
 | A1 | 1'088'240'912 | 1291x2167 | ![](images/A11.jpg) | ![](images/A12.jpg) | ![](images/A13.png) | ![](images/A14.jpg) | ![](images/A15.jpg) |
 | A2 | 4'106'885'020 | 2582x4334 | ![](images/A21.jpg) | ![](images/A22.jpg) | ![](images/A23.png) | ![](images/A24.jpg) | ![](images/A25.jpg) |
 | B1 | 35'230'916 | 1291x2167 | ![](images/B11.jpg) | ![](images/B12.png) | ![](images/B13.png) | ![](images/B14.jpg) | ![](images/B15.jpg) |
