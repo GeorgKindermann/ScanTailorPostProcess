@@ -7,6 +7,7 @@ int main(int argc, char* argv[]) {
   TIFF* tif = TIFFOpen(argv[1], "r");
   if(tif) {
     std::string path{std::filesystem::path(argv[1]).parent_path()};
+    if(path == "") path = ".";
     std::string fname{std::filesystem::path(argv[1]).stem()};
     std::filesystem::create_directories(path + "/bw");
     std::filesystem::create_directories(path + "/c");

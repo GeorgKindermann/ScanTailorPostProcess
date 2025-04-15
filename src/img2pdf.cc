@@ -76,6 +76,7 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> cF;
   for(int i=3; i<argc; ++i) {
     std::string path{std::filesystem::path(argv[i]).parent_path()};
+    if(path == "") path = ".";
     std::string fname{std::filesystem::path(argv[i]).stem()};
     std::string t{path + "/c/" + fname + "_t[0-9]+_[0-9]+_s[0-9]+_[0-9]+\\.jpg"};
     t = getFirstFileName(t);
@@ -84,41 +85,42 @@ int main(int argc, char* argv[]) {
   }
 
   std::vector<size_t> sym;
-  std::ofstream outfile("/tmp/pdfx.pdf", std::ofstream::binary);
-  outfile << R"(%PDF-1.6
+  //Changed outfile to std::cout
+  //std::ofstream outfile("/tmp/pdfx.pdf", std::ofstream::binary);
+  std::cout << R"(%PDF-1.6
 )";
-  sym.push_back(outfile.tellp());
-  outfile << R"(1 0 obj <</Type /Catalog
+  sym.push_back(std::cout.tellp());
+  std::cout << R"(1 0 obj <</Type /Catalog
 /Pages 2 0 R>>
 endobj
 )";
-  sym.push_back(outfile.tellp());
-  outfile << R"(2 0 obj <</Type /Pages
+  sym.push_back(std::cout.tellp());
+  std::cout << R"(2 0 obj <</Type /Pages
 /Count )" << cF.size() << R"(
 /Kids [)";
   size_t kid = jbSym ? 6 : 5;
   for(size_t i=0; i<cF.size(); ++i) {
-    if(i>0) outfile << " ";
+    if(i>0) std::cout << " ";
     if(cF[i] != "") ++kid;
-    outfile << kid << " 0 R";
+    std::cout << kid << " 0 R";
     kid += 3;
   }
-  outfile << R"(]>>
+  std::cout << R"(]>>
 endobj
 )";
   size_t obj = 2;
   if(jbSym) {
     ++obj;
-    sym.push_back(outfile.tellp());
-    outfile << R"(3 0 obj <</Length )";
-    outfile << std::filesystem::file_size(jbFS);
-    outfile << R"(>>
+    sym.push_back(std::cout.tellp());
+    std::cout << R"(3 0 obj <</Length )";
+    std::cout << std::filesystem::file_size(jbFS);
+    std::cout << R"(>>
 stream
 )";
   infile.open(jbFS, std::ios::binary);
-  outfile << infile.rdbuf();
+  std::cout << infile.rdbuf();
   infile.close();
-  outfile << R"(
+  std::cout << R"(
 endstream
 endobj
 )";
@@ -132,23 +134,23 @@ endobj
     w = std::byteswap(w);
     infile.read(reinterpret_cast<char *>(&h), sizeof(h));
     h = std::byteswap(h);
-    sym.push_back(outfile.tellp());
-    outfile << ++obj;
-    outfile << R"( 0 obj <</Subtype /Image 
+    sym.push_back(std::cout.tellp());
+    std::cout << ++obj;
+    std::cout << R"( 0 obj <</Subtype /Image 
 /Width )" << w << " /Height " << h << R"(
 /ImageMask true
 )";
-    outfile << (jbSym ? R"(/Filter /JBIG2Decode /DecodeParms << /JBIG2Globals 3 0 R >>)" : R"(/Filter /JBIG2Decode)");
-    outfile << R"(
+    std::cout << (jbSym ? R"(/Filter /JBIG2Decode /DecodeParms << /JBIG2Globals 3 0 R >>)" : R"(/Filter /JBIG2Decode)");
+    std::cout << R"(
 /Length )";
-    outfile << std::filesystem::file_size(jbF[i]);
-    outfile << R"(>>
+    std::cout << std::filesystem::file_size(jbF[i]);
+    std::cout << R"(>>
 stream
 )";
     infile.seekg(0);
-    outfile << infile.rdbuf();
+    std::cout << infile.rdbuf();
     infile.close();
-    outfile << R"(
+    std::cout << R"(
 endstream
 endobj
 )";
@@ -158,22 +160,22 @@ endobj
       uint8_t nBits, nColors;
       infile.open(cF[i], std::ios::binary);
       getJpgWH(infile, w, h, nBits, nColors);
-      sym.push_back(outfile.tellp());
-      outfile << ++obj;
-      outfile << R"( 0 obj <</Subtype /Image 
+      sym.push_back(std::cout.tellp());
+      std::cout << ++obj;
+      std::cout << R"( 0 obj <</Subtype /Image 
 /Width )" << w << " /Height " << h << R"(
 /Filter /DCTDecode
 /ColorSpace /Device)" << (nColors==1 ? "Gray" : "RGB") << R"(
 /BitsPerComponent )" << static_cast<unsigned int>(nBits) << R"(
 /Length )";
-      outfile << std::filesystem::file_size(cF[i]);
-      outfile << R"(>>
+      std::cout << std::filesystem::file_size(cF[i]);
+      std::cout << R"(>>
 stream
 )";
       infile.seekg(0);
-      outfile << infile.rdbuf();
+      std::cout << infile.rdbuf();
       infile.close();
-      outfile << R"(
+      std::cout << R"(
 endstream
 endobj
 )";
@@ -187,37 +189,37 @@ endobj
   }
   //ss << "0 0 0 rg\n"; //setzt nonstroking colour auf schwarz - nicht unbedingt noetig
   ss << "q " << w << " 0 0 " << h << " 1 1 cm /B Do Q";
-  sym.push_back(outfile.tellp());
-  outfile << ++obj;
-  outfile << R"( 0 obj <</Length )" << ss.tellp() << ">>\n" << "stream\n";
-  outfile << ss.rdbuf();
-  outfile << R"(
+  sym.push_back(std::cout.tellp());
+  std::cout << ++obj;
+  std::cout << R"( 0 obj <</Length )" << ss.tellp() << ">>\n" << "stream\n";
+  std::cout << ss.rdbuf();
+  std::cout << R"(
 endstream
 endobj
 )";
 
-  sym.push_back(outfile.tellp());
-  outfile << ++obj;
-  outfile << R"( 0 obj <</Type /Page /Parent 2 0 R /UserUnit )" << argv[1] << R"( /MediaBox [0 0 )"
+  sym.push_back(std::cout.tellp());
+  std::cout << ++obj;
+  std::cout << R"( 0 obj <</Type /Page /Parent 2 0 R /UserUnit )" << argv[1] << R"( /MediaBox [0 0 )"
    << w+2 << " " << h+2 << R"(]
 /Contents )" << obj-1 << R"( 0 R
 /Resources <</XObject <</B )" << (obj - (cF[i] == "" ? 2 : 3)) << R"( 0 R)";
-  if(cF[i] != "") outfile << R"(
+  if(cF[i] != "") std::cout << R"(
 /F )" << obj - 2 << " 0 R";
-outfile << R"(>> >> >>
+std::cout << R"(>> >> >>
 endobj
 )";
   }
-  size_t xref = outfile.tellp();
-  outfile << "xref\n0 " << obj+1;
-  outfile << "\n0000000000 65535 f\n";
-  for(const size_t& x : sym) outfile << std::setfill('0') << std::setw(10) << x << " 00000 n\n";
-  outfile << R"(trailer <</Size )" << obj+1 << R"(
+  size_t xref = std::cout.tellp();
+  std::cout << "xref\n0 " << obj+1;
+  std::cout << "\n0000000000 65535 f\n";
+  for(const size_t& x : sym) std::cout << std::setfill('0') << std::setw(10) << x << " 00000 n\n";
+  std::cout << R"(trailer <</Size )" << obj+1 << R"(
 /Root 1 0 R>>
 startxref
 )" << xref << R"(
 %%EOF
 )";
   
-  outfile.close();
+  //outfile.close();
 }
