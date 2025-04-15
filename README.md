@@ -119,3 +119,10 @@ and trim the result afterwards with:
 ```
 mogrify -trim *.tif
 ```
+
+---
+Converting the resulting pdf back to somthing simmilar like the original tifs (the compressions are not lossless) using [pdftoppm](https://github.com/justmoon/poppler-http/tree/master):
+```
+mkdir tif
+pdftoppm -r 72 -tiff -tiffcompression deflate out.pdf ./tif/p
+```
