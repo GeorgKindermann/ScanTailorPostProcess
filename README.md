@@ -99,4 +99,23 @@ pipx run ocrmypdf -l rus --jobs 7 --output-type pdf out.pdf ocr.pdf
 Where `-l` sets the language to use (rus..Russian, eng..English, deu..German, frk..German-Fraktur, deu+eng..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.  
 
 [ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
-In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binareies coud be copied to `~/.local/bin` or `/usr/local/bin`.
+In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+
+---
+I found it sometimes usefull to increase the (automatically) selected content by some pixels using [xmlstarlet](https://xmlstar.sourceforge.net/) (here for the ScanTailor project file `st.ScanTailor`)
+```
+#Increase Content by D pixel in each diretion
+P0=/project/filters/select-content/page/params
+P=$P0/content-box
+D=2
+xmlstarlet ed -u "$P0[@mode=\"auto\"]/@mode" -v manual st.ScanTailor |
+    xmlstarlet ed -u "$P/top/@y" -x .-$D |
+    xmlstarlet ed -u "$P/bottom/@y" -x .+$D |
+    xmlstarlet ed -u "$P/left/@x" -x .-$D |
+    xmlstarlet ed -u "$P/right/@x" -x .+$D |
+    tail +2 > st2.ScanTailor
+```
+and trim the result afterwards with:
+```
+mogrify -trim *.tif
+```
