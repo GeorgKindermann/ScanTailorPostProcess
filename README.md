@@ -78,7 +78,11 @@ for fn in *.tif; do splitBWC $fn; done
 This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
 The gray/color images need to be converted to JPEG:
 ```
-mogrify -path ./c -format jpg -quality 20 -resize 50% ./c/*.tif
+# For color pictures
+mogrify -path ./c -format jpg -quality 35 -resize 70% ./c/*.tif
+
+# For grayscale pictures
+mogrify -path ./c -format jpg -colorspace Gray -quality 35 -resize 70% ./c/*.tif
 ```
 where `-quality` sets the compression quality (100 is highest quality) and `-resize` could be used to change the resolution of the image.  
 The black and white images need to be converted to JBIG2:
