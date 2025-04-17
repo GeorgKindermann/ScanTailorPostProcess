@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     std::string fname{std::filesystem::path(argv[1]).stem()};
     std::filesystem::create_directories(path + "/bw");
     std::filesystem::create_directories(path + "/c");
+    std::filesystem::create_directories(path + "/c2");
     uint32_t w, h;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
@@ -83,6 +84,27 @@ int main(int argc, char* argv[]) {
 	    TIFFWriteScanline(image, c, yh-y, 0);
 	  }
 	  TIFFClose(image);
+	  _TIFFfree(c);
+	  
+	  image = TIFFOpen((path + "/c2/" + fname + ".tif").c_str(), "w");
+	  TIFFSetField(image, TIFFTAG_IMAGEWIDTH, w);
+	  TIFFSetField(image, TIFFTAG_IMAGELENGTH, h);
+	  TIFFSetField(image, TIFFTAG_BITSPERSAMPLE, 8);
+	  TIFFSetField(image, TIFFTAG_SAMPLESPERPIXEL, 3);
+	  TIFFSetField(image, TIFFTAG_ROWSPERSTRIP, 1);
+	  TIFFSetField(image, TIFFTAG_PHOTOMETRIC, 2);
+	  TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+	  c = (unsigned char*) _TIFFmalloc(w * 3 * sizeof (c));
+	  for(size_t y = 0; y < h; ++y) {
+	    for(size_t x = 0; x < w; ++x) {
+	      unsigned char* t = (unsigned char*)&raster[y*w + x];
+	      for(size_t i=0; i<3; ++i) c[x*3+i] = t[i];
+	    }
+	    TIFFWriteScanline(image, c, h-1-y, 0);
+	  }
+	  TIFFClose(image);
+	  _TIFFfree(c);
+	  
 	}
 	
       }

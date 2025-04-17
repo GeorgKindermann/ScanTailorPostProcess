@@ -1,3 +1,162 @@
+Post-processing the output from [Scantailor-Experimental](https://github.com/ImageProcessing-ElectronicPublications/scantailor-experimental).
+
+# Create a PDF
+
+## Only black and white pages
+
+Go to the folder of the output images which have been proccessed with ScanTailor (out) and convert them to JBIG2.
+```
+jbig2 -p -s -t .85 -a -w .1 *.tif
+```
+where `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
+This will create files named `output.` followed by a 5 digit number and one called `output.sym`. The name coudld be changed with `-b`  
+And create a pdf with:
+```
+jbig2topdf.py output > out.pdf
+```
+An optical character recognition (OCR) could be done with:
+```
+pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
+```
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
+
+[JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
+
+## Mixture of black and white, gray and color pages
+
+Go to the folder of the output images which have been proccessed with ScanTailor (out) and split the pages in BW and color with:
+```
+for fn in *.tif; do splitBWC $fn; done
+```
+This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
+The gray/color images need to be converted to JPEG:
+```
+# For color pictures
+mogrify -path ./c -format jpg -quality 35 -resize 70% ./c/*.tif
+
+# For grayscale pictures
+mogrify -path ./c -format jpg -colorspace Gray -quality 35 -resize 70% ./c/*.tif
+```
+where `-quality` sets the compression quality (100 is highest quality) and `-resize` could be used to change the resolution of the image.  
+The black and white images need to be converted to JBIG2:
+```
+mkdir j
+jbig2 -b ./j/jb2 -p -s -t .85 -a -w .1 ./bw/*.tif
+```
+where `-b` sets the path and name of the resulting files, `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
+Those pictures could be arranged to a pdf with:
+```
+img2pdf .24 ./j/jb2 *.tif > out.pdf
+```
+where the first number (here `.24`) gives the Userunit what defines the resolution (72/0.24 = 300dpi), the second argument (`./j/jb2`) gives the folder there the jbig2 images could be found, the third argument (`*.tif`) gives the names of the original images which are used to find the color images.  
+An optical character recognition (OCR) could be done with:
+```
+pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
+```
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
+
+[ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.  
+In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+
+## Reconverting
+
+Reonverting the resulting pdf back to somthing simmilar like the original tifs (the compressions are not lossless):
+```
+mkdir tif
+pdftoppm -r 72 -tiff -tiffcompression deflate out.pdf ./tif/p
+```
+[pdftoppm](https://github.com/justmoon/poppler-http/tree/master) is used.  
+
+# Create a DJVU
+
+## Only black and white pages
+
+Go to the folder of the output images which have been proccessed with ScanTailor (out) and convert them to DJVU.
+```
+minidjvu *.tif out.djvu
+```
+An optical character recognition (OCR) could be done with:
+```
+pipx run ocrodjvu -e tesseract -l rus -j 7 -o ocr.djvu out.djvu
+```
+[minidjvu](https://minidjvu.sourceforge.net/) and [ocrodjvu](https://github.com/jwilk-archive/ocrodjvu) are used.  
+
+## Mixture of black and white, gray and color pages
+
+Go to the folder of the output images which have been proccessed with ScanTailor (out) and split the pages in BW and color with:
+```
+for fn in *.tif; do splitBWC $fn; done
+```
+This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
+The gray/color images need to be converted to JPEG:
+```
+mogrify -path ./c2 -format jpg ./c2/*.tif
+```
+Those JPEG's are converted to c44 with:
+```
+for fn in ./c2/*.jpg; do c44 $fn; done
+```
+The black and white images are converted th DJVU with:
+```
+minidjvu -i ./bw/*.tif index.djvu
+```
+The color pictures are included with:
+```
+for fn in ./c2/*.djvu
+do
+    s=${fn##*/}
+    s=${s%.djvu}
+    echo $s
+    djvuextract $fn BG44=bg44.bg44
+    djvuextract $s.djvu INCL=incl.txt Sjbz=sjbz.sjbz
+    djvumake $s.djvu INCL=$(< incl.txt) Sjbz=sjbz.sjbz BG44=bg44.bg44
+done
+```
+A single file is created with:
+```
+djvm -c out.djvu index.djvu
+```
+An optical character recognition (OCR) could be done with:
+```
+pipx run ocrodjvu -e tesseract -l deu -j 7 -o ocr.djvu out.djvu
+```
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `-j` sets the number of cores to use and `-e` the ocr-engine.
+
+[ImageMagick - mogrify](https://imagemagick.org), [DjVuLibre](https://djvu.sourceforge.net/), [minidjvu](https://minidjvu.sourceforge.net/) and [ocrodjvu](https://github.com/jwilk-archive/ocrodjvu) are used.  
+In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+
+
+## Reconverting
+
+Reonverting the resulting djvu back to somthing simmilar like the original tifs (the compressions are not lossless):
+```
+mkdir tif
+ddjvu -format=tiff out.djvu ./tif/out.tif
+tiffsplit ./tif/out.tif ./tif/
+```
+[DjVuLibre](https://djvu.sourceforge.net/) is used.
+
+---
+I found it sometimes usefull to increase the (automatically) selected content by some pixels using [xmlstarlet](https://xmlstar.sourceforge.net/) (here for the ScanTailor project file `st.ScanTailor`)
+```
+#Increase Content by D pixel in each diretion
+P0=/project/filters/select-content/page/params
+P=$P0/content-box
+D=2
+xmlstarlet ed -u "$P0[@mode=\"auto\"]/@mode" -v manual st.ScanTailor |
+    xmlstarlet ed -u "$P/top/@y" -x .-$D |
+    xmlstarlet ed -u "$P/bottom/@y" -x .+$D |
+    xmlstarlet ed -u "$P/left/@x" -x .-$D |
+    xmlstarlet ed -u "$P/right/@x" -x .+$D |
+    tail +2 > st2.ScanTailor
+```
+and trim the result afterwards with:
+```
+mogrify -trim *.tif
+```
+
+---
+
 Compare different methods when post-processing the output from [Scantailor-Experimental](https://github.com/ImageProcessing-ElectronicPublications/scantailor-experimental).
 
 To reprocess the shown results [get the images](1getData.sh) from [Test images for Scan Tailor](https://github.com/ImageProcessing-ElectronicPublications/scantailor-testing). [Create](2makeProj.sh) or [use](STprojects/) those ScanTailor projects and [create filtered pictures](3runStCreateFilteredImages.sh) by going to stage 6 in ScanTailor.
@@ -49,84 +208,3 @@ The filtered images could be converted from tif to jpeg and there the quality co
 | B2=>split=>harmonize=><br>compress=>combine=>Ocr| 4'871'032 | Yes | ![](images/b2SplitOcr1.jpg) | ![](images/b2SplitOcr2.png) | ![](images/b2SplitOcr3.png) | ![](images/b2SplitOcr4.jpg) | ![](images/b2SplitOcr5.jpg) | [b2SplitOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
 | B2=>split=>compress=><br>combine| 4'159'321 | No | ![](images/b2SplitB1.jpg) | ![](images/b2SplitB2.png) | ![](images/b2SplitB3.png) | ![](images/b2SplitB4.jpg) | ![](images/b2SplitB5.jpg) | [b2SplitB.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
 | B2=>split=>compress=><br>combine=>Ocr| 5'304'178 | Yes | ![](images/b2SplitBOcr1.jpg) | ![](images/b2SplitBOcr2.png) | ![](images/b2SplitBOcr3.png) | ![](images/b2SplitBOcr4.jpg) | ![](images/b2SplitBOcr5.jpg) | [b2SplitBOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
-
----
-In case the scaned project consists only of *black and white* pages:  
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and convert them to JBIG2.
-```
-jbig2 -p -s -t .85 -a -w .1 *.tif
-```
-where `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
-This will create files named `output.` followed by a 5 digit number and one called `output.sym`. The name coudld be changed with `-b`  
-And create a pdf with:
-```
-jbig2topdf.py output > out.pdf
-```
-An optical character recognition (OCR) could be done with:
-```
-pipx run ocrmypdf -l rus --jobs 7 --output-type pdf out.pdf ocr.pdf
-```
-Where `-l` sets the language to use (rus..Russian, eng..Englisch, deu..German, frk..German-Fraktur, deu+eng..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.  
-[JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
-
----
-In case the scaned project consists of *black and white* and also *gray or color* parts:  
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and split the pages in BW and color with:
-```
-for fn in *.tif; do splitBWC $fn; done
-```
-This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
-The gray/color images need to be converted to JPEG:
-```
-# For color pictures
-mogrify -path ./c -format jpg -quality 35 -resize 70% ./c/*.tif
-
-# For grayscale pictures
-mogrify -path ./c -format jpg -colorspace Gray -quality 35 -resize 70% ./c/*.tif
-```
-where `-quality` sets the compression quality (100 is highest quality) and `-resize` could be used to change the resolution of the image.  
-The black and white images need to be converted to JBIG2:
-```
-mkdir j
-jbig2 -b ./j/jb2 -p -s -t .85 -a -w .1 ./bw/*.tif
-```
-where `-b` sets the path and name of the resulting files, `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
-Those pictures could be arranged to a pdf with:
-```
-img2pdf .24 ./j/jb2 *.tif > out.pdf
-```
-where the first number (here `.24`) gives the Userunit what defines the resolution (72/0.24 = 300dpi), the second argument (`./j/jb2`) gives the folder there the jbig2 images could be found, the third argument (`*.tif`) gives the names of the original images which are used to find the color images.  
-An optical character recognition (OCR) could be done with:
-```
-pipx run ocrmypdf -l rus --jobs 7 --output-type pdf out.pdf ocr.pdf
-```
-Where `-l` sets the language to use (rus..Russian, eng..English, deu..German, frk..German-Fraktur, deu+eng..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.  
-
-[ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
-In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
-
----
-I found it sometimes usefull to increase the (automatically) selected content by some pixels using [xmlstarlet](https://xmlstar.sourceforge.net/) (here for the ScanTailor project file `st.ScanTailor`)
-```
-#Increase Content by D pixel in each diretion
-P0=/project/filters/select-content/page/params
-P=$P0/content-box
-D=2
-xmlstarlet ed -u "$P0[@mode=\"auto\"]/@mode" -v manual st.ScanTailor |
-    xmlstarlet ed -u "$P/top/@y" -x .-$D |
-    xmlstarlet ed -u "$P/bottom/@y" -x .+$D |
-    xmlstarlet ed -u "$P/left/@x" -x .-$D |
-    xmlstarlet ed -u "$P/right/@x" -x .+$D |
-    tail +2 > st2.ScanTailor
-```
-and trim the result afterwards with:
-```
-mogrify -trim *.tif
-```
-
----
-Converting the resulting pdf back to somthing simmilar like the original tifs (the compressions are not lossless) using [pdftoppm](https://github.com/justmoon/poppler-http/tree/master):
-```
-mkdir tif
-pdftoppm -r 72 -tiff -tiffcompression deflate out.pdf ./tif/p
-```
