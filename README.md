@@ -28,14 +28,19 @@ Go to the folder of the output images which have been proccessed with ScanTailor
 ```
 for fn in *.tif; do splitBWC $fn; done
 ```
-This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
+This creates the folders `bw` and `c` and places there the black and white and gray/color page.
+The color images are trimmed to their content:
+```
+for fn in ./c/*.tif; do subImages $fn; done
+```
+This creates the folder `cs` and places there the cropped gray/color page.
 The gray/color images need to be converted to JPEG:
 ```
 # For color pictures
-mogrify -path ./c -format jpg -quality 35 -resize 70% ./c/*.tif
+mogrify -path ./cs -format jpg -quality 35 -resize 70% ./cs/*.tif
 
 # For grayscale pictures
-mogrify -path ./c -format jpg -colorspace Gray -quality 35 -resize 70% ./c/*.tif
+mogrify -path ./cs -format jpg -colorspace Gray -quality 35 -resize 70% ./cs/*.tif
 ```
 where `-quality` sets the compression quality (100 is highest quality) and `-resize` could be used to change the resolution of the image.  
 The black and white images need to be converted to JBIG2:
@@ -56,7 +61,7 @@ pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
 Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
 
 [ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.  
-In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+In addition `splitBWC`, `subImages` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
 
 ## Reconverting
 
@@ -90,11 +95,11 @@ for fn in *.tif; do splitBWC $fn; done
 This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
 The gray/color images need to be converted to JPEG:
 ```
-mogrify -path ./c2 -format jpg ./c2/*.tif
+mogrify -path ./c -format jpg ./c/*.tif
 ```
 Those JPEG's are converted to c44 with:
 ```
-for fn in ./c2/*.jpg; do c44 $fn; done
+for fn in ./c/*.jpg; do c44 $fn; done
 ```
 The black and white images are converted th DJVU with:
 ```
@@ -102,7 +107,7 @@ minidjvu -i ./bw/*.tif index.djvu
 ```
 The color pictures are included with:
 ```
-for fn in ./c2/*.djvu
+for fn in ./c/*.djvu
 do
     s=${fn##*/}
     s=${s%.djvu}
@@ -123,7 +128,7 @@ pipx run ocrodjvu -e tesseract -l deu -j 7 -o ocr.djvu out.djvu
 Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `-j` sets the number of cores to use and `-e` the ocr-engine.
 
 [ImageMagick - mogrify](https://imagemagick.org), [DjVuLibre](https://djvu.sourceforge.net/), [minidjvu](https://minidjvu.sourceforge.net/) and [ocrodjvu](https://github.com/jwilk-archive/ocrodjvu) are used.  
-In addition `splitBWC` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+In addition `splitBWC`, `subImages` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
 
 
 ## Reconverting

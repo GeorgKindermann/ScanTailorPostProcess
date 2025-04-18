@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     std::string path{std::filesystem::path(argv[i]).parent_path()};
     if(path == "") path = ".";
     std::string fname{std::filesystem::path(argv[i]).stem()};
-    std::string t{path + "/c/" + fname + "_t[0-9]+_[0-9]+_s[0-9]+_[0-9]+\\.jpg"};
+    std::string t{path + "/cs/" + fname + "_t[0-9]+_[0-9]+_s[0-9]+_[0-9]+\\.jpg"};
     t = getFirstFileName(t);
     cF.push_back(t);
     if(t != "") ++nc;
