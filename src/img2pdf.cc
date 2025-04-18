@@ -6,6 +6,7 @@
 #include <regex>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 
 int getJpgWH(std::ifstream &infile, uint16_t &w, uint16_t &h, uint8_t &nBits, uint8_t &nColors) {
   uint16_t u;
@@ -41,24 +42,34 @@ int getJpgWH(std::ifstream &infile, uint16_t &w, uint16_t &h, uint8_t &nBits, ui
   return 1;
 }
 
-std::string getFirstFileName(std::string wildcard) {
+std::vector<std::string> getFileNames(std::string wildcard) {
+  std::vector<std::string> ret;
   std::string path{std::regex_replace(wildcard, std::regex("[^/]*$"), "")};
   if(path == "") path = "./";
   for(const auto & entry : std::filesystem::directory_iterator(path)) {
-    if(std::regex_search(entry.path().generic_string(), std::regex(wildcard))) return entry.path().generic_string();
+    if(std::regex_search(entry.path().generic_string(), std::regex(wildcard))) ret.push_back(entry.path().generic_string());
   }
-  return "";
+  return ret;
 }
 
 int main(int argc, char* argv[]) {
   if(argc < 3) {
     std::cerr << "Too few arguments\n";
-    std::cerr << "img2pdf Userunit basenameOfJBIG2Files originalTifFiles\n";
+    std::cerr << "img2pdf Userunit \"PageLabels\" basenameOfJBIG2Files originalTifFiles\n";
+    // "0 << /P (cover) >> 1 << /S /r >> 6 << /S /D /St 7 >>"
+    // /P The label prefix for page labels in this range
+    // /S numbering style 
+    //    D Decimal Arabic numerals
+    //    R Uppercase Roman numerals
+    //    r Lowercase Roman numerals
+    //    A Uppercase letters
+    //    a Lowercase letters
+    // /St Starting Number
     return(0);
   }
   std::ifstream infile;
 
-  std::string jb2(argv[2]);
+  std::string jb2(argv[3]);
   std::string jbFS(jb2 + ".sym");
   bool jbSym = std::filesystem::exists(jbFS);
   
@@ -66,32 +77,29 @@ int main(int argc, char* argv[]) {
   for (const auto & entry : std::filesystem::directory_iterator(std::regex_replace(jb2, std::regex("[^/]*$"), ""))) {
     if(std::regex_search(entry.path().generic_string(), std::regex(jb2 + ".[0-9]+"))) jbF.push_back(entry.path());
   }
-  if(jbF.size() != static_cast<size_t>(argc - 3)) {
+  if(jbF.size() != static_cast<size_t>(argc - 4)) {
     std::cerr << "Number of names does not match JBIG2 number of files\n";
     return(0);
   }
   std::sort(jbF.begin(), jbF.end());
 
-  size_t nc = 0;
-  std::vector<std::string> cF;
-  for(int i=3; i<argc; ++i) {
+  std::vector<std::vector<std::string> > cF;
+  for(int i=4; i<argc; ++i) {
     std::string path{std::filesystem::path(argv[i]).parent_path()};
     if(path == "") path = ".";
     std::string fname{std::filesystem::path(argv[i]).stem()};
     std::string t{path + "/cs/" + fname + "_t[0-9]+_[0-9]+_s[0-9]+_[0-9]+\\.jpg"};
-    t = getFirstFileName(t);
-    cF.push_back(t);
-    if(t != "") ++nc;
+    cF.push_back(getFileNames(t));
   }
 
   std::vector<size_t> sym;
-  //Changed outfile to std::cout
-  //std::ofstream outfile("/tmp/pdfx.pdf", std::ofstream::binary);
   std::cout << R"(%PDF-1.6
 )";
   sym.push_back(std::cout.tellp());
   std::cout << R"(1 0 obj <</Type /Catalog
-/Pages 2 0 R>>
+/Pages 2 0 R)";
+  if(strcmp(argv[2], "") != 0) std::cout << "\n/PageLabels << /Nums [" << argv[2] << "]>> ";
+  std::cout << R"(>>
 endobj
 )";
   sym.push_back(std::cout.tellp());
@@ -101,7 +109,8 @@ endobj
   size_t kid = jbSym ? 6 : 5;
   for(size_t i=0; i<cF.size(); ++i) {
     if(i>0) std::cout << " ";
-    if(cF[i] != "") ++kid;
+    //if(cF[i].size() > 0) ++kid;
+    kid += cF[i].size();
     std::cout << kid << " 0 R";
     kid += 3;
   }
@@ -117,10 +126,10 @@ endobj
     std::cout << R"(>>
 stream
 )";
-  infile.open(jbFS, std::ios::binary);
-  std::cout << infile.rdbuf();
-  infile.close();
-  std::cout << R"(
+    infile.open(jbFS, std::ios::binary);
+    std::cout << infile.rdbuf();
+    infile.close();
+    std::cout << R"(
 endstream
 endobj
 )";
@@ -155,10 +164,11 @@ endstream
 endobj
 )";
 
-    if(cF[i] != "") {
+    //if(cF[i].size() > 0) {
+    for(size_t j=0; j<cF[i].size(); ++j) {
       uint16_t w, h;
       uint8_t nBits, nColors;
-      infile.open(cF[i], std::ios::binary);
+      infile.open(cF[i][j], std::ios::binary);
       getJpgWH(infile, w, h, nBits, nColors);
       sym.push_back(std::cout.tellp());
       std::cout << ++obj;
@@ -168,7 +178,7 @@ endobj
 /ColorSpace /Device)" << (nColors==1 ? "Gray" : "RGB") << R"(
 /BitsPerComponent )" << static_cast<unsigned int>(nBits) << R"(
 /Length )";
-      std::cout << std::filesystem::file_size(cF[i]);
+      std::cout << std::filesystem::file_size(cF[i][j]);
       std::cout << R"(>>
 stream
 )";
@@ -182,10 +192,11 @@ endobj
     }
 
   std::stringstream ss;
-  if(cF[i] != "") {
+  //if(cF[i].size() > 0) {
+  for(size_t j=0; j<cF[i].size(); ++j) {
     std::smatch m;
-    std::regex_match(cF[i], m, std::regex(".*_t([0-9]+)_([0-9]+)_s([0-9]+)_([0-9]+).*"));
-    ss << "q " << m[3] << " 0 0 " << m[4] << " " << std::stoi(m[1]) + 1 << " " << std::stoi(m[2]) + 1 <<" cm /F Do Q\n";
+    std::regex_match(cF[i][j], m, std::regex(".*_t([0-9]+)_([0-9]+)_s([0-9]+)_([0-9]+).*"));
+    ss << "q " << m[3] << " 0 0 " << m[4] << " " << std::stoi(m[1]) + 1 << " " << std::stoi(m[2]) + 1 <<" cm /F" << j << " Do Q\n";
   }
   //ss << "0 0 0 rg\n"; //setzt nonstroking colour auf schwarz - nicht unbedingt noetig
   ss << "q " << w << " 0 0 " << h << " 1 1 cm /B Do Q";
@@ -203,9 +214,10 @@ endobj
   std::cout << R"( 0 obj <</Type /Page /Parent 2 0 R /UserUnit )" << argv[1] << R"( /MediaBox [0 0 )"
    << w+2 << " " << h+2 << R"(]
 /Contents )" << obj-1 << R"( 0 R
-/Resources <</XObject <</B )" << (obj - (cF[i] == "" ? 2 : 3)) << R"( 0 R)";
-  if(cF[i] != "") std::cout << R"(
-/F )" << obj - 2 << " 0 R";
+/Resources <</XObject <</B )" << (obj - 2 - cF[i].size()) << R"( 0 R)";
+  for(size_t j=0; j<cF[i].size(); ++j) {
+    std::cout << "\n/F" << j << " " << obj - 1 - cF[i].size() + j << " 0 R";
+  }
 std::cout << R"(>> >> >>
 endobj
 )";

@@ -31,7 +31,11 @@ for fn in *.tif; do splitBWC $fn; done
 This creates the folders `bw` and `c` and places there the black and white and gray/color page.
 The color images are trimmed to their content:
 ```
+# Option 1: One picture per page
 for fn in ./c/*.tif; do subImages $fn; done
+
+# Option 2: Tries to find single pictures
+for fn in ./c/*.tif; do subImages $fn 1; done
 ```
 This creates the folder `cs` and places there the cropped gray/color page.
 The gray/color images need to be converted to JPEG:
@@ -51,9 +55,24 @@ jbig2 -b ./j/jb2 -p -s -t .85 -a -w .1 ./bw/*.tif
 where `-b` sets the path and name of the resulting files, `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
 Those pictures could be arranged to a pdf with:
 ```
-img2pdf .24 ./j/jb2 *.tif > out.pdf
+# Option 1: Default page numbering (1, 2, 3, ...)
+img2pdf .24 "" ./j/jb2 *.tif > out.pdf
+
+# Option 2: Define PageLabels
+img2pdf .24 "0 << /P (cover) >> 1 << /S /r >> 6 << /S /D /St 7 >>" ./j/jb2 *.tif > out.pdf
 ```
-where the first number (here `.24`) gives the Userunit what defines the resolution (72/0.24 = 300dpi), the second argument (`./j/jb2`) gives the folder there the jbig2 images could be found, the third argument (`*.tif`) gives the names of the original images which are used to find the color images.  
+where the first number (here `.24`) gives the *Userunit* what defines the resolution (72/0.24 = 300dpi), the second argument could be used to define *PageLabels*, the third argument (`./j/jb2`) gives the folder there the jbig2 images could be found, the fourth argument (`*.tif`) gives the names of the original images which are used to find the color images.  
+```
+PageLabels:
+/P The label prefix for page labels in this range
+/S Numbering style 
+   D Decimal Arabic numerals
+   R Uppercase Roman numerals
+   r Lowercase Roman numerals
+   A Uppercase letters
+   a Lowercase letters
+/St Starting Number
+```
 An optical character recognition (OCR) could be done with:
 ```
 pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
