@@ -4,14 +4,15 @@ cp /tmp/st/outB1/*.tif /tmp/st/b1Split
 # Remove white Borders
 mogrify -trim /tmp/st/b1Split/*.tif
 # Split the image in Black White and Color
-for fn in /tmp/st/b1Split/*.tif; do ./splitBWC $fn; done
+for fn in /tmp/st/b1Split/*.tif; do splitBWC $fn; done
+for fn in /tmp/st/b1Split/c/*.tif; do subImages $fn 1; done
 # Recompress Color Pictures as JPEG
-mogrify -path /tmp/st/b1Split/c/ -format jpg -quality 20 -resize 50% /tmp/st/b1Split/c/*.tif
+mogrify -path /tmp/st/b1Split/cs/ -format jpg -quality 20 -resize 50% /tmp/st/b1Split/cs/*.tif
 # Convert Black White to jbig2
 mkdir /tmp/st/b1Split/j
 jbig2 -b /tmp/st/b1Split/j/jb2 -p -s -t .85 -a -w .1 /tmp/st/b1Split/bw/*.tif
 # Combine pictures to pdf
-./img2pdf .24 /tmp/st/b1Split/j/jb2 /tmp/st/b1Split/*.tif
+img2pdf .24 "" /tmp/st/b1Split/j/jb2 /tmp/st/b1Split/*.tif > /tmp/pdfx.pdf
 #make ocr
 pipx run ocrmypdf -l rus --jobs 7 --output-type pdf /tmp/pdfx.pdf /tmp/st/b1SplotOcr.pdf
 

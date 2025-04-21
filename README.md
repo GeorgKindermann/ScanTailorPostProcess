@@ -4,12 +4,12 @@ Post-processing the output from [Scantailor-Experimental](https://github.com/Ima
 
 ## Only black and white pages
 
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and convert them to JBIG2.
+Go to the folder of the output images which have been processed with ScanTailor (out) and convert them to JBIG2.
 ```
 jbig2 -p -s -t .85 -a -w .1 *.tif
 ```
-where `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
-This will create files named `output.` followed by a 5 digit number and one called `output.sym`. The name coudld be changed with `-b`  
+where `-p` produces PDF ready data, `-s` is the symbol mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic threshold in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
+This will create files named `output.` followed by a 5 digit number and one called `output.sym`. The name could be changed with `-b`  
 And create a pdf with:
 ```
 jbig2topdf.py output > out.pdf
@@ -18,18 +18,18 @@ An optical character recognition (OCR) could be done with:
 ```
 pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
 ```
-Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..English, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
 
 [JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
 
-## Mixture of black and white, gray and color pages
+## Mixture of black and white, grey and colour pages
 
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and split the pages in BW and color with:
+Go to the folder of the output images which have been processed with ScanTailor (out) and split the pages in BW and colour with:
 ```
 for fn in *.tif; do splitBWC $fn; done
 ```
-This creates the folders `bw` and `c` and places there the black and white and gray/color page.
-The color images are trimmed to their content:
+This creates the folders `bw` and `c` and places there the black and white and grey/colour page.
+The colour images are trimmed to their content:
 ```
 # Option 1: One picture per page
 for fn in ./c/*.tif; do subImages $fn; done
@@ -37,13 +37,13 @@ for fn in ./c/*.tif; do subImages $fn; done
 # Option 2: Tries to find single pictures
 for fn in ./c/*.tif; do subImages $fn 1; done
 ```
-This creates the folder `cs` and places there the cropped gray/color page.
-The gray/color images need to be converted to JPEG:
+This creates the folder `cs` and places there the cropped grey/colour page.
+The grey/colour images need to be converted to JPEG:
 ```
-# For color pictures
+# For colour pictures
 mogrify -path ./cs -format jpg -quality 35 -resize 70% ./cs/*.tif
 
-# For grayscale pictures
+# For grey-scale pictures
 mogrify -path ./cs -format jpg -colorspace Gray -quality 35 -resize 70% ./cs/*.tif
 ```
 where `-quality` sets the compression quality (100 is highest quality) and `-resize` could be used to change the resolution of the image.  
@@ -52,7 +52,8 @@ The black and white images need to be converted to JBIG2:
 mkdir j
 jbig2 -b ./j/jb2 -p -s -t .85 -a -w .1 ./bw/*.tif
 ```
-where `-b` sets the path and name of the resulting files, `-p` produces PDF ready data, `-s` is the symbole mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic thresholding in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
+where `-b` sets the path and name of the resulting files, `-p` produces PDF ready data, `-s` is the symbol mode for texts, `-t` sets the classification threshold for symbol coder (tool low values could lead to character substitution errors. E.g. a 1 gets an I. Default is .92), `-a` uses automatic threshold in symbol encoder and `-w` sets the classification weight for symbol coder (def: 0.5).  
+Have also a look at [jbig2enc-minidjvu](https://github.com/ImageProcessing-ElectronicPublications/jbig2enc-minidjvu/blob/main/doc/recipe.md) which shows a method to have high compression rates while keeping misclassifications low.  
 Those pictures could be arranged to a pdf with:
 ```
 # Option 1: Default page numbering (1, 2, 3, ...)
@@ -77,14 +78,14 @@ An optical character recognition (OCR) could be done with:
 ```
 pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
 ```
-Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..English, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
 
 [ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.  
 In addition `splitBWC`, `subImages` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
 
 ## Reconverting
 
-Reonverting the resulting pdf back to somthing simmilar like the original tifs (the compressions are not lossless):
+Reconverting the resulting pdf back to something similar like the original tifs (the compression are not lossless):
 ```
 mkdir tif
 pdftoppm -r 72 -tiff -tiffcompression deflate out.pdf ./tif/p
@@ -95,7 +96,7 @@ pdftoppm -r 72 -tiff -tiffcompression deflate out.pdf ./tif/p
 
 ## Only black and white pages
 
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and convert them to DJVU.
+Go to the folder of the output images which have been processed with ScanTailor (out) and convert them to DJVU.
 ```
 minidjvu *.tif out.djvu
 ```
@@ -105,14 +106,14 @@ pipx run ocrodjvu -e tesseract -l rus -j 7 -o ocr.djvu out.djvu
 ```
 [minidjvu](https://minidjvu.sourceforge.net/) and [ocrodjvu](https://github.com/jwilk-archive/ocrodjvu) are used.  
 
-## Mixture of black and white, gray and color pages
+## Mixture of black and white, grey and colour pages
 
-Go to the folder of the output images which have been proccessed with ScanTailor (out) and split the pages in BW and color with:
+Go to the folder of the output images which have been processed with ScanTailor (out) and split the pages in BW and colour with:
 ```
 for fn in *.tif; do splitBWC $fn; done
 ```
-This creates the folders `bw` and `c` and places there the black and white and gray/color page parts.  
-The gray/color images need to be converted to JPEG:
+This creates the folders `bw` and `c` and places there the black and white and grey/colour page parts.  
+The grey/colour images need to be converted to JPEG:
 ```
 mogrify -path ./c -format jpg ./c/*.tif
 ```
@@ -120,11 +121,11 @@ Those JPEG's are converted to c44 with:
 ```
 for fn in ./c/*.jpg; do c44 $fn; done
 ```
-The black and white images are converted th DJVU with:
+The black and white images are converted to DJVU with:
 ```
 minidjvu -i ./bw/*.tif index.djvu
 ```
-The color pictures are included with:
+The colour pictures are included with:
 ```
 for fn in ./c/*.djvu
 do
@@ -144,15 +145,15 @@ An optical character recognition (OCR) could be done with:
 ```
 pipx run ocrodjvu -e tesseract -l deu -j 7 -o ocr.djvu out.djvu
 ```
-Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..Englisch, `deu+eng`..German and English), `-j` sets the number of cores to use and `-e` the ocr-engine.
+Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..English, `deu+eng`..German and English), `-j` sets the number of cores to use and `-e` the ocr-engine.
 
 [ImageMagick - mogrify](https://imagemagick.org), [DjVuLibre](https://djvu.sourceforge.net/), [minidjvu](https://minidjvu.sourceforge.net/) and [ocrodjvu](https://github.com/jwilk-archive/ocrodjvu) are used.  
-In addition `splitBWC`, `subImages` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
+In addition `splitBWC` and `subImages`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
 
 
 ## Reconverting
 
-Reonverting the resulting djvu back to somthing simmilar like the original tifs (the compressions are not lossless):
+Reconverting the resulting djvu back to something similar like the original tifs (the compression are not lossless):
 ```
 mkdir tif
 ddjvu -format=tiff out.djvu ./tif/out.tif
@@ -161,9 +162,9 @@ tiffsplit ./tif/out.tif ./tif/
 [DjVuLibre](https://djvu.sourceforge.net/) is used.
 
 ---
-I found it sometimes usefull to increase the (automatically) selected content by some pixels using [xmlstarlet](https://xmlstar.sourceforge.net/) (here for the ScanTailor project file `st.ScanTailor`)
+I found it sometimes useful to increase the (automatically) selected content by some pixels using [xmlstarlet](https://xmlstar.sourceforge.net/) (here for the ScanTailor project file `st.ScanTailor`)
 ```
-#Increase Content by D pixel in each diretion
+#Increase Content by D pixel in each direction
 P0=/project/filters/select-content/page/params
 P=$P0/content-box
 D=2
@@ -195,7 +196,7 @@ One demo project treats all content as an image (A) the other tries to convert t
 | B1 | 35'230'916 | 1291x2167 | ![](images/B11.jpg) | ![](images/B12.png) | ![](images/B13.png) | ![](images/B14.jpg) | ![](images/B15.jpg) |
 | B2 | 121'703'962 | 2582x4334 | ![](images/B21.jpg) | ![](images/B22.png) | ![](images/B23.png) | ![](images/B24.jpg) | ![](images/B25.jpg) |
 
-The filtered images could be converted from tif to jpeg and there the quality could be adjusted. Also a conversion to jpeg2000 was done. A pdf could be created with ocrimg2pdfmypdf. mfbpdf could be used to create a (Mask+FG+BG).pdf which could again go throug ocrmypdf. In addition one programm was written which splits an image in black and white and color (splitBWC). The color part could be converted to a JPEG with individual compression settings. The BW part coudl be harmonized using minidjvu-mod and jbig2. Finaly the BW and color pictures are combined to a pdf using img2pdf. splitBWC and img2pdf are in development but are showing a possible way of prepocessing scaned pages.
+The filtered images could be converted from tif to jpeg and there the quality could be adjusted. Also a conversion to jpeg2000 was done. A pdf could be created with ocrimg2pdfmypdf. mfbpdf could be used to create a (Mask+FG+BG).pdf which could again go through ocrmypdf. In addition one program was written which splits an image in black and white and colour (splitBWC). The colour part could be converted to a JPEG with individual compression settings. The BW part could be harmonised using minidjvu-mod and jbig2. Finally the BW and colour pictures are combined to a pdf using img2pdf. splitBWC and img2pdf are in development but are showing a possible way of prepossessing scanned pages.
 
 | What | Size | OCR | Thumb | Text | Letters | Picture | Zoom | Code |
 |:-----|-----:|----:|:-----:|:----:|:-------:|:-------:|:----:|:-----|
@@ -219,16 +220,22 @@ The filtered images could be converted from tif to jpeg and there the quality co
 | B1=>ocrmypdf | 8'680'026 | Yes | ![](images/b1Ocr1.jpg) | ![](images/b1Ocr2.png) | ![](images/b1Ocr3.png) | ![](images/b1Ocr4.jpg) | ![](images/b1Ocr5.jpg) | [b1Orcmypdf.sh](4postProcess/b1Orcmypdf.sh) |
 | B1=>mfbpdf | 7'467'788 | No | ![](images/b1Mfb1.jpg) | ![](images/b1Mfb2.png) | ![](images/b1Mfb3.png) | ![](images/b1Mfb4.jpg) | ![](images/b1Mfb5.jpg) | [b1Mfbpdf.sh](4postProcess/b1Mfbpdf.sh) |
 | B1=>mfbpdf=>ocrmypdf | 6'290'884 | Yes | ![](images/b1MfbOcr1.jpg) | ![](images/b1MfbOcr2.png) | ![](images/b1MfbOcr3.png) | ![](images/b1MfbOcr4.jpg) | ![](images/b1MfbOcr5.jpg) | [b1MfbpdfOcr.sh](4postProcess/b1MfbpdfOcr.sh) |
-| B1=>split=>harmonize=><br>compress=>combine| 2'719'546 | No | ![](images/b1Split1.jpg) | ![](images/b1Split2.png) | ![](images/b1Split3.png) | ![](images/b1Split4.jpg) | ![](images/b1Split5.jpg) | [b1Split.sh](4postProcess/b1SplitDjvuJbig2Img.sh) |
-| B1=>split=>harmonize=><br>compress=>combine=>ocr| 3'933'190 | Yes | ![](images/b1SplitOcr1.jpg) | ![](images/b1SplitOcr2.png) | ![](images/b1SplitOcr3.png) | ![](images/b1SplitOcr4.jpg) | ![](images/b1SplitOcr5.jpg) | [b1SplitOcr.sh](4postProcess/b1SplitDjvuJbig2ImgOcr.sh) |
-| B1=>split=>compress=><br>combine| 2'954'851 | No | ![](images/b1SplitB1.jpg) | ![](images/b1SplitB2.png) | ![](images/b1SplitB3.png) | ![](images/b1SplitB4.jpg) | ![](images/b1SplitB5.jpg) | [b1SplitB.sh](4postProcess/b1SplitJbig2Img.sh) |
-| B1=>split=>compress=><br>combine=>OCR| 4'159'321 | Yes | ![](images/b1SplitBOcr1.jpg) | ![](images/b1SplitBOcr2.png) | ![](images/b1SplitBOcr3.png) | ![](images/b1SplitBOcr4.jpg) | ![](images/b1SplitBOcr5.jpg) | [b1SplitBOcr.sh](4postProcess/b1SplitJbig2ImgOcr.sh) |
+| B1=>split=>harmonize=><br>compress=>combine| 2'889'264 | No | ![](images/b1Split1.jpg) | ![](images/b1Split2.png) | ![](images/b1Split3.png) | ![](images/b1Split4.jpg) | ![](images/b1Split5.jpg) | [b1Split.sh](4postProcess/b1SplitDjvuJbig2Img.sh) |
+| B1=>split=>harmonize=><br>compress=>combine=>ocr| 4'100'380 | Yes | ![](images/b1SplitOcr1.jpg) | ![](images/b1SplitOcr2.png) | ![](images/b1SplitOcr3.png) | ![](images/b1SplitOcr4.jpg) | ![](images/b1SplitOcr5.jpg) | [b1SplitOcr.sh](4postProcess/b1SplitDjvuJbig2ImgOcr.sh) |
+| B1=>split=>compress=><br>combine| 2'948'903 | No | ![](images/b1SplitB1.jpg) | ![](images/b1SplitB2.png) | ![](images/b1SplitB3.png) | ![](images/b1SplitB4.jpg) | ![](images/b1SplitB5.jpg) | [b1SplitB.sh](4postProcess/b1SplitJbig2Img.sh) |
+| B1=>split=>compress=><br>combine=>OCR| 4'156'514 | Yes | ![](images/b1SplitBOcr1.jpg) | ![](images/b1SplitBOcr2.png) | ![](images/b1SplitBOcr3.png) | ![](images/b1SplitBOcr4.jpg) | ![](images/b1SplitBOcr5.jpg) | [b1SplitBOcr.sh](4postProcess/b1SplitJbig2ImgOcr.sh) |
+| B1=>split=>Djvu| 4'593'981 | No | ![](images/b1Djvu1.jpg) | ![](images/b1Djvu2.png) | ![](images/b1Djvu3.png) | ![](images/b1Djvu4.jpg) | ![](images/b1Djvu5.jpg) | [b1SplitDjvu.sh](4postProcess/b1SplitDjvu.sh) |
+| B1=>split=>Djvu=>Ocr| 5'085'714 | Yes | ![](images/b1DjvuOcr1.jpg) | ![](images/b1DjvuOcr2.png) | ![](images/b1DjvuOcr3.png) | ![](images/b1DjvuOcr4.jpg) | ![](images/b1DjvuOcr5.jpg) | [b1SplitDjvuOcr.sh](4postProcess/b1SplitDjvuOcr.sh) |
 | | | | | | | | | |
 | B2 | 121'703'962 | No | ![](images/B21.jpg) | ![](images/B22.png) | ![](images/B23.png) | ![](images/B24.jpg) | ![](images/B25.jpg) | |
 | B2=>ocrmypdf | 17'932'000 | Yes | ![](images/b2Ocr1.jpg) | ![](images/b2Ocr2.png) | ![](images/b2Ocr3.png) | ![](images/b2Ocr4.jpg) | ![](images/b2Ocr5.jpg) | [b2Orcmypdf.sh](4postProcess/b2Orcmypdf.sh) |
 | B2=>mfbpdf | 16'086'247 | No | ![](images/b2Mfb1.jpg) | ![](images/b2Mfb2.png) | ![](images/b2Mfb3.png) | ![](images/b2Mfb4.jpg) | ![](images/b2Mfb5.jpg) | [b2Mfbpdf.sh](4postProcess/b2Mfbpdf.sh) |
 | B2=>mfbpdf=>ocrmypdf | 11'755'367 | Yes | ![](images/b2MfbOcr1.jpg) | ![](images/b2MfbOcr2.png) | ![](images/b2MfbOcr3.png) | ![](images/b2MfbOcr4.jpg) | ![](images/b2MfbOcr5.jpg) | [b2MfbpdfOcr.sh](4postProcess/b2MfbpdfOcr.sh) |
-| B2=>split=>harmonize=><br>compress=>combine| 3'625'202 | No | ![](images/b2Split1.jpg) | ![](images/b2Split2.png) | ![](images/b2Split3.png) | ![](images/b2Split4.jpg) | ![](images/b2Split5.jpg) | [b2Split.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
-| B2=>split=>harmonize=><br>compress=>combine=>Ocr| 4'871'032 | Yes | ![](images/b2SplitOcr1.jpg) | ![](images/b2SplitOcr2.png) | ![](images/b2SplitOcr3.png) | ![](images/b2SplitOcr4.jpg) | ![](images/b2SplitOcr5.jpg) | [b2SplitOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
-| B2=>split=>compress=><br>combine| 4'159'321 | No | ![](images/b2SplitB1.jpg) | ![](images/b2SplitB2.png) | ![](images/b2SplitB3.png) | ![](images/b2SplitB4.jpg) | ![](images/b2SplitB5.jpg) | [b2SplitB.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
-| B2=>split=>compress=><br>combine=>Ocr| 5'304'178 | Yes | ![](images/b2SplitBOcr1.jpg) | ![](images/b2SplitBOcr2.png) | ![](images/b2SplitBOcr3.png) | ![](images/b2SplitBOcr4.jpg) | ![](images/b2SplitBOcr5.jpg) | [b2SplitBOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
+| B2=>split=>harmonize=><br>compress=>combine| 3'752'449 | No | ![](images/b2Split1.jpg) | ![](images/b2Split2.png) | ![](images/b2Split3.png) | ![](images/b2Split4.jpg) | ![](images/b2Split5.jpg) | [b2Split.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
+| B2=>split=>harmonize=><br>compress=>combine=>Ocr| 4'994'891 | Yes | ![](images/b2SplitOcr1.jpg) | ![](images/b2SplitOcr2.png) | ![](images/b2SplitOcr3.png) | ![](images/b2SplitOcr4.jpg) | ![](images/b2SplitOcr5.jpg) | [b2SplitOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
+| B2=>split=>compress=><br>combine| 4'048'656 | No | ![](images/b2SplitB1.jpg) | ![](images/b2SplitB2.png) | ![](images/b2SplitB3.png) | ![](images/b2SplitB4.jpg) | ![](images/b2SplitB5.jpg) | [b2SplitB.sh](4postProcess/b2SplitDjvuJbig2Img.sh) |
+| B2=>split=>compress=><br>combine=>Ocr| 5'297'867 | Yes | ![](images/b2SplitBOcr1.jpg) | ![](images/b2SplitBOcr2.png) | ![](images/b2SplitBOcr3.png) | ![](images/b2SplitBOcr4.jpg) | ![](images/b2SplitBOcr5.jpg) | [b2SplitBOcr.sh](4postProcess/b2SplitDjvuJbig2ImgOcr.sh) |
+| B2=>split=>Djvu| 10'771'448 | No | ![](images/b2Djvu1.jpg) | ![](images/b2Djvu2.png) | ![](images/b2Djvu3.png) | ![](images/b2Djvu4.jpg) | ![](images/b2Djvu5.jpg) | [b2SplitDjvu.sh](4postProcess/b2SplitDjvu.sh) |
+| B2=>split=>Djvu=>Ocr| 11'318'293 | Yes | ![](images/b2DjvuOcr1.jpg) | ![](images/b2DjvuOcr2.png) | ![](images/b2DjvuOcr3.png) | ![](images/b2DjvuOcr4.jpg) | ![](images/b2DjvuOcr5.jpg) | [b2SplitDjvuOcr.sh](4postProcess/b2SplitDjvuOcr.sh) |
+
+Interesting that making an OCR increases the PDF about twice as mutch as the DJVU..
