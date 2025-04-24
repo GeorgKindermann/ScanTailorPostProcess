@@ -16,11 +16,17 @@ jbig2topdf.py output > out.pdf
 ```
 An optical character recognition (OCR) could be done with:
 ```
+# Option 1:
 pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
+
+# Option 2:
+ls ./bw/*.tif >files.txt
+tesseract -l deu -c textonly_pdf=1 --dpi 72 files.txt text pdf
+qpdf out.pdf --underlay text.pdf -- ocr.pdf
 ```
 Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..English, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
 
-[JBIG2](https://github.com/agl/jbig2enc) and [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.
+[JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html), [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) and [qpdf](https://github.com/qpdf/qpdf) are used.
 
 ## Mixture of black and white, grey and colour pages
 
@@ -76,11 +82,17 @@ PageLabels:
 ```
 An optical character recognition (OCR) could be done with:
 ```
+# Option 1
 pipx run ocrmypdf -l deu --jobs 7 --output-type pdf out.pdf ocr.pdf
+
+# Option 2:
+ls ./bw/*.tif >files.txt
+tesseract -l deu -c textonly_pdf=1 --dpi 72 files.txt text pdf
+qpdf out.pdf --underlay text.pdf -- ocr.pdf
 ```
 Where `-l` sets the language to use (`deu`..German, `frk`..German-Fraktur, `rus`..Russian, `eng`..English, `deu+eng`..German and English), `--jobs` sets the number of cores to use, `--output-type pdf` keep the pdf as it is.
 
-[ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html) are used.  
+[ImageMagick - mogrify](https://imagemagick.org), [JBIG2](https://github.com/agl/jbig2enc), [ocrmypdf](https://ocrmypdf.readthedocs.io/en/latest/index.html), [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) and [qpdf](https://github.com/qpdf/qpdf) are used.  
 In addition `splitBWC`, `subImages` and `img2pdf`, which can be found at [src](https://github.com/GeorgKindermann/ScanTailorPostProcess/tree/main/src) are used. If `libtiff` is installed they could be compiled with `make`. The resulting binaries could be copied to `~/.local/bin` or `/usr/local/bin`.
 
 ## Reconverting
